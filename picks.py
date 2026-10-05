@@ -1,6 +1,6 @@
 # id: (funky_vid, funky_note, other_vid)  ; funky_note "" ok, "?" uncertain
 YT = {
-1:("pnnje2pjmr4","","" ),
+1:("pnnje2pjmr4","","4hqVxR-wBEw"),
 2:("GjdyhZwuoU0","","9yw4GiM3zjc"),
 3:("5yFxVguVg08","","n6kROSnqkEI"),
 4:("","",""),
@@ -14,7 +14,7 @@ YT = {
 12:("KPRgh1Rqcco","","GynJgpCJW28"),
 13:("IblCq-DME_8","",""),
 14:("AXvYkY0Y264","","Kw1dPbp0yOg"),
-15:("QljYcBCVJsM","?","Bk_NysJeqQk"),
+15:("QljYcBCVJsM","","Bk_NysJeqQk"),
 16:("PzqYj6cS6nM","","o_ndPMNgE80"),
 17:("aakBFTZLZjc","",""),
 18:("zlaYoNoxKIk","?","2WhgIbWv8qE"),
@@ -30,7 +30,7 @@ YT = {
 28:("g-MmiIRaIrM","","UhC94d_U9UE"),
 29:("V5ikSi16o5s","","Lc7-64dCn8A"),
 30:("7jKSpCnEEks","","EvLo2KwaujM"),
-31:("9cAxDL7jsVI","",""),
+31:("9cAxDL7jsVI","","9cAxDL7jsVI"),
 32:("LnA0dgp0ToQ","","U6XaIRHHhgM"),
 33:("mghaewwW2UU","","RBrjxbSqMKY"),
 34:("","","VNckISsHZEA"),
@@ -44,7 +44,18 @@ YT = {
 42:("FjjqSCU2XnQ","","mRCpqMxdRec"),
 43:("","",""),
 44:("","","Twk4xbr6xJA"),
-45:("IjSt9seqRGA","",""),
+45:("IjSt9seqRGA","","gf8YbC83ZOg"),
 46:("","","8yTIbayoyUo"),
 47:("t_R1WW4ZOEY","","t_BGO_1_eWk"),
+}
+
+# Spotify fallback for sides with no YouTube video: (row, "A"|"B") -> (track_id, title, artist)
+# Searched open.spotify.com on 2026-10-05 for all 12 still-missing sides: no exact recording found.
+SP = {}
+# per-side notes (row, side) -> text
+SIDE_NOTE = {
+ (1,"A"): "A 面实为 Abraham & The Metronomes – Party（拆分单曲）",
+ (31,"B"): "与 A 面同一视频（Pt.1 & 2 连播，Part 2 在后半段）",
+ (35,"B"): "视频含 Part I & II",
+ (18,"B"): "视频来自 D-W 6901 的 Zip-A-Doe-Do-Dah，推测为同一录音",
 }

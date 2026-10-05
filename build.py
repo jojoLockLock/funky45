@@ -1,12 +1,12 @@
 import json,base64,io,html
 from PIL import Image
 from data import ROWS
-from picks import YT
+from picks import YT, SP, SIDE_NOTE
 rel=json.load(open("releases.json")); ch=json.load(open("chosen.json")); oe=json.load(open("oembed.json"))
 IMG={1:1,2:0,3:1,4:0,5:0,6:2,7:1,8:0,9:1,10:0,11:1,12:0,13:0,14:0,15:0,16:1,17:0,18:0,19:1,20:2,21:0,22:1,23:0,24:0,25:1,26:0,27:1,28:0,29:0,30:0,31:0,32:0,33:1,34:0,35:0,36:0,37:1,38:1,39:1,40:0,41:1,42:0,43:0,44:1,45:0,46:0,47:1}
 MATCHNOTE={
 1:"Discogs：拆分单曲 Abraham And The Metronomes / Illinois Connection – Party / Po' Boy's Dream (FUNK45.020)",
-15:"YouTube：仅「Release - Topic」频道的 “On the Run”，时长 3:44 ≈ Discogs 3:50，较可能但未完全确认",
+15:"YouTube：Melting Pot Music 官方自动生成的 “On the Run · Imperial Breed”（已确认）",
 18:"YouTube：该视频来自 D-W 6901 版本的 “Zip-A-Doe-Do-Dah”（同为 2:30），推测为同一录音",
 19:"Discogs B 面全名：My Baby (Just Told Me She Loves Me)",
 24:"Discogs B 面：We Must Be In Love",
@@ -45,8 +45,21 @@ for r in ROWS:
     f=YT[id_]
     k=ch.get(str(id_)); d=rel[k] if k else None
     rec={"page":1,"n":id_,"artist":artist,"a":a,"b":b,"year":year,"label":label,"cat":cat,"tune":tune,"rating":rating,"ref":ref,"notes":notes,
-         "yt":yt(f[0]),"ytUncertain":f[1]=="?","ytOther":yt(f[2]),"match":MATCHNOTE.get(id_,""),
+         "match":MATCHNOTE.get(id_,""),
          "discogs":None,"discogsSearch":"https://www.discogs.com/search/?type=release&q="+__import__("urllib.parse").parse.quote(f"{artist} {a if not a.startswith('.') else b}")}
+    fside="A" if tune=="A1" else "B"
+    for side in ("A","B"):
+        v=f[0] if side==fside else f[2]
+        y=yt(v)
+        if y:
+            so={"src":"yt",**y}
+            if side==fside and f[1]=="?": so["uncertain"]=True
+        elif (id_,side) in SP:
+            t=SP[(id_,side)]; so={"src":"sp","id":t[0],"title":t[1],"channel":t[2]}
+        else:
+            so={"src":None}
+        if (id_,side) in SIDE_NOTE: so["note"]=SIDE_NOTE[(id_,side)]
+        rec[side]=so
     if d:
         i=IMG[id_]
         rec["discogs"]={"id":int(k),"url":f"https://www.discogs.com/release/{k}","title":f"{d['artists']} – {d['title']}","year":d["year"],"country":d["country"],
@@ -56,4 +69,7 @@ json.dump(out,open("records_p1.json","w"),ensure_ascii=False)
 tpl=open("template.html",encoding="utf-8").read()
 js=json.dumps(out,ensure_ascii=False).replace("</","<\\/")
 open("funky45_p1.html","w",encoding="utf-8").write(tpl.replace("/*__DATA__*/[]",js))
-print("yt",sum(1 for x in out if x["yt"]),"discogs",sum(1 for x in out if x["discogs"]))
+import collections
+c=collections.Counter(x[sd]["src"] for x in out for sd in "AB")
+print("sides",dict(c),"discogs",sum(1 for x in out if x["discogs"]))
+print("missing",[(x["n"],sd,x["a"] if sd=="A" else x["b"]) for x in out for sd in "AB" if not x[sd]["src"]])
