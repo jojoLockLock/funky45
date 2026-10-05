@@ -56,10 +56,13 @@ a{color:var(--acc2);text-decoration:none}a:hover{text-decoration:underline}
 .player.none{display:flex;align-items:center;justify-content:center;color:#777;cursor:default;font-size:13px;background:var(--card2);flex-direction:column;gap:6px}
 .ytl{margin-top:5px;font-size:12px;color:var(--mut);display:flex;gap:10px;flex-wrap:wrap}
 .unc{color:#f1c40f}
+.hint{display:none;margin-top:6px;font-size:12px;color:#ffd79a;background:#3a2a10;border:1px solid #7a5517;border-radius:6px;padding:5px 8px;max-width:340px}
+.ytbtn{display:inline-block;background:#c4302b;color:#fff!important;border-radius:6px;padding:2px 9px;font-weight:600}
+.ytbtn:hover{background:#e0403a;text-decoration:none!important}
 #lb{position:fixed;inset:0;background:#000d;display:none;align-items:center;justify-content:center;z-index:50;cursor:zoom-out;flex-direction:column;gap:10px}
 #lb img{width:min(90vw,480px);max-height:80vh;border-radius:8px;image-rendering:auto}
 #lb div{color:#ccc;font-size:13px}
-@media (max-width:900px){.card{grid-template-columns:96px 1fr}.lbl{width:96px;height:96px}.pcol{grid-column:1/-1}.player{width:100%}}
+@media (max-width:900px){.card{grid-template-columns:96px 1fr}.lbl{width:96px;height:96px}.pcol{grid-column:1/-1}.player{width:100%}.hint{max-width:none}}
 </style>
 </head>
 <body>
@@ -96,14 +99,15 @@ const rc=document.getElementById('rates');
 RATES.forEach(r=>{const c=document.createElement('span');c.className='chip'+(r===rate?' on':'');c.textContent=r;c.onclick=()=>{rate=r;[...rc.children].forEach(x=>x.classList.toggle('on',x===c));render();};rc.appendChild(c);});
 function playerHTML(y,i){
   if(!y) return `<div class="player none"><div>未找到可靠的视频</div></div>`;
-  return `<div class="player" data-yt="${esc(y.id)}" title="${esc(y.title)}"><img loading="lazy" src="https://i.ytimg.com/vi/${esc(y.id)}/hqdefault.jpg" alt=""><div class="pb"></div><div class="cap">${esc(y.title)}</div></div>`;
+  return `<div class="player" data-yt="${esc(y.id)}"${y.noEmbed?' data-noembed="1"':''} title="${esc(y.title)}"><img loading="lazy" src="https://i.ytimg.com/vi/${esc(y.id)}/hqdefault.jpg" alt=""><div class="pb"></div><div class="cap">${esc(y.title)}</div></div>`;
 }
 function card(r){
   const d=r.discogs, fA=r.tune==='A1', fB=r.tune==='B1';
   const rateHtml=r.rating?`<span class="rate" style="background:var(--${esc(r.rating)})">${esc(r.rating)}</span>`:`<span class="rate x">无</span>`;
   const lbl=d&&d.img?`<div class="lbl" data-big="${r.n}" title="${esc(d.title)}"><img src="${d.img}" alt="label"></div>`:`<div class="lbl none">无盘面图</div>`;
   let yl='';
-  if(r.yt) yl+=`<a href="${ytUrl(r.yt.id)}" target="_blank" rel="noopener">在 YouTube 打开 ↗</a>`;
+  if(r.yt) yl+=`<a class="ytbtn" href="${ytUrl(r.yt.id)}" target="_blank" rel="noopener">▶ 在 YouTube 打开</a>`;
+  if(r.yt&&r.yt.noEmbed) yl+=`<span class="unc">该视频不可内嵌，仅能在 YouTube 打开</span>`;
   if(r.ytUncertain) yl+=`<span class="unc">⚠ 视频匹配存疑</span>`;
   if(r.ytOther) yl+=`<a href="${ytUrl(r.ytOther.id)}" target="_blank" rel="noopener" title="${esc(r.ytOther.title)}">另一面 ↗</a>`;
   if(!r.yt) yl+=`<a href="https://www.youtube.com/results?search_query=${encodeURIComponent(r.artist.replace(/\s*\[\d\]/,'')+' '+(fA?r.a:r.b))}" target="_blank" rel="noopener">YouTube 搜索 ↗</a>`;
@@ -128,7 +132,7 @@ function card(r){
        ${d?`<a href="${d.url}" target="_blank" rel="noopener">Discogs: ${esc(d.title)} (${esc(d.year||'?')}, ${esc(d.country||'')}) ↗</a>`:`<a href="${r.discogsSearch}" target="_blank" rel="noopener">Discogs 搜索 ↗</a>`}
      </div>
    </div>
-   <div class="pcol">${playerHTML(r.yt)}<div class="ytl">${yl}</div></div>
+   <div class="pcol">${playerHTML(r.yt)}${r.yt?'<div class="hint">如果出现登录验证（“Sign in to confirm you’re not a bot”），点「在 YouTube 打开」，或先在本浏览器登录 YouTube 后刷新本页。</div>':''}<div class="ytl">${yl}</div></div>
   </article>`;
 }
 const list=document.getElementById('list'), q=document.getElementById('q'), onlyYt=document.getElementById('onlyYt');
@@ -148,13 +152,17 @@ list.addEventListener('click',e=>{
   const p=e.target.closest('.player[data-yt]');
   if(p&&!p.querySelector('iframe')){
     const id=p.dataset.yt;
-    if(FILE){window.open(ytUrl(id),'_blank','noopener');return;}
-    document.querySelectorAll('.player iframe').forEach(f=>{const pp=f.parentElement;f.remove();pp.querySelectorAll('img,.pb,.cap').forEach(x=>x.style.display='');});
+    if(FILE||p.dataset.noembed==='1'){window.open(ytUrl(id),'_blank','noopener');return;}
+    document.querySelectorAll('.player iframe').forEach(f=>{const pp=f.parentElement;f.remove();pp.querySelectorAll('img,.pb,.cap').forEach(x=>x.style.display='');const h=pp.parentElement.querySelector('.hint');if(h)h.style.display='none';});
     p.querySelectorAll('img,.pb,.cap').forEach(x=>x.style.display='none');
     const f=document.createElement('iframe');
-    f.src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0`;
-    f.allow='autoplay; encrypted-media; picture-in-picture'; f.referrerPolicy='strict-origin-when-cross-origin'; f.allowFullscreen=true;
-    p.appendChild(f); return;
+    const origin=(location.protocol==='https:'||location.protocol==='http:')?location.origin:'https://jojolocklock.github.io';
+    f.src=`https://www.youtube.com/embed/${encodeURIComponent(id)}?autoplay=1&playsinline=1&rel=0&origin=${encodeURIComponent(origin)}`;
+    f.allow='autoplay; encrypted-media; picture-in-picture; fullscreen'; f.referrerPolicy='strict-origin-when-cross-origin'; f.allowFullscreen=true;
+    f.title='YouTube player';
+    p.appendChild(f);
+    const h=p.parentElement.querySelector('.hint'); if(h) h.style.display='block';
+    return;
   }
   const l=e.target.closest('.lbl[data-big]');
   if(l){const r=RECORDS.find(x=>String(x.n)===l.dataset.big&&x.discogs);const lb=document.getElementById('lb');lb.querySelector('img').src=r.discogs.img;lb.querySelector('div').textContent=r.discogs.title+' · '+r.discogs.labels;lb.style.display='flex';}

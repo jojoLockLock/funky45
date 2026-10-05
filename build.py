@@ -31,10 +31,14 @@ def b64img(path,w=320):
     im=Image.open(path).convert("RGB"); im.thumbnail((w,w),Image.LANCZOS)
     buf=io.BytesIO(); im.save(buf,"JPEG",quality=82,optimize=True)
     return "data:image/jpeg;base64,"+base64.b64encode(buf.getvalue()).decode()
+# videos that are age-restricted / not embeddable (checked with yt-dlp -J: age_limit, playable_in_embed); none as of 2026-10-05
+NOEMBED=set()
 def yt(v):
     if not v: return None
     t=oe.get(v,[0,["",""]])[1]
-    return {"id":v,"title":t[0],"channel":t[1]}
+    d={"id":v,"title":t[0],"channel":t[1]}
+    if v in NOEMBED: d["noEmbed"]=True
+    return d
 out=[]
 for r in ROWS:
     id_,artist,a,b,year,label,cat,tune,rating,ref,notes=r
